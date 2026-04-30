@@ -2,13 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Clock, BarChart3, Brain } from "lucide-react"
+import { Home, Clock, Brain } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/", label: "Today", icon: Home },
   { href: "/history", label: "History", icon: Clock },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/quiz", label: "Quiz", icon: Brain },
 ]
 

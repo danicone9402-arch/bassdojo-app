@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { BottomNav } from "@/components/bottom-nav"
 import { SessionCard } from "@/components/session-card"
 import { SessionDetail } from "@/components/session-detail"
+import { StreakIndicator } from "@/components/streak-indicator"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Music2, Calendar, RefreshCw } from "lucide-react"
@@ -14,6 +15,8 @@ export default function HomePage() {
   const [todaySession, setTodaySession] = useState<Session | null>(null)
   const [selectedSession, setSelectedSession] = useState<SessionWithBlocks | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [streak, setStreak] = useState(0)
+  const [isTodayCompleted, setIsTodayCompleted] = useState(false)
   const supabase = createClient()
 
   const fetchTodaySession = async () => {
@@ -29,7 +32,54 @@ export default function HomePage() {
       .single()
 
     setTodaySession(data)
+    setIsTodayCompleted(data?.completed || false)
     setIsLoading(false)
+  }
+
+  const fetchStreak = async () => {
+    // Get all completed sessions ordered by date descending
+    const { data: sessions } = await supabase
+      .from("sessions")
+      .select("scheduled_date, completed")
+      .eq("completed", true)
+      .order("scheduled_date", { ascending: false })
+
+    if (!sessions || sessions.length === 0) {
+      setStreak(0)
+      return
+    }
+
+    // Calculate streak - count consecutive days with completed sessions
+    let currentStreak = 0
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // Get unique dates (in case multiple sessions per day)
+    const uniqueDates = [...new Set(sessions.map(s => s.scheduled_date))].sort().reverse()
+
+    for (let i = 0; i < uniqueDates.length; i++) {
+      const sessionDate = new Date(uniqueDates[i])
+      sessionDate.setHours(0, 0, 0, 0)
+
+      const expectedDate = new Date(today)
+      expectedDate.setDate(today.getDate() - i)
+      expectedDate.setHours(0, 0, 0, 0)
+
+      // Allow for yesterday to count if today not practiced yet
+      if (i === 0) {
+        const daysDiff = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
+        if (daysDiff > 1) break // Streak broken
+        currentStreak++
+      } else {
+        const prevDate = new Date(uniqueDates[i - 1])
+        prevDate.setHours(0, 0, 0, 0)
+        const daysDiff = Math.floor((prevDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
+        if (daysDiff > 1) break // Gap in streak
+        currentStreak++
+      }
+    }
+
+    setStreak(currentStreak)
   }
 
   const fetchSessionWithBlocks = async (sessionId: string) => {
@@ -52,6 +102,7 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchTodaySession()
+    fetchStreak()
   }, [])
 
   const handleSessionClick = (session: Session) => {
@@ -61,6 +112,7 @@ export default function HomePage() {
   const handleBack = () => {
     setSelectedSession(null)
     fetchTodaySession()
+    fetchStreak()
   }
 
   if (selectedSession) {
@@ -78,28 +130,35 @@ export default function HomePage() {
     <main className="min-h-screen pb-20">
       <div className="mx-auto max-w-md px-4 py-6">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Music2 className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold">BassDoJo</h1>
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Music2 className="h-6 w-6 text-primary" />
+                <h1 className="text-2xl font-bold">BassDoJo</h1>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => { fetchTodaySession(); fetchStreak(); }}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={fetchTodaySession}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
+
+          {/* Streak */}
+          <div className="mt-4 flex justify-center rounded-lg bg-card p-3">
+            <StreakIndicator streak={streak} isActiveToday={isTodayCompleted} />
+          </div>
         </div>
 
         {/* Today's Session */}

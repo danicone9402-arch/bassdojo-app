@@ -7,7 +7,7 @@ import { SessionDetail } from "@/components/session-detail"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Clock, CheckCircle, Calendar } from "lucide-react"
+import { Clock, CheckCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Session, SessionWithBlocks } from "@/lib/types"
 
@@ -15,7 +15,7 @@ export default function HistoryPage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [selectedSession, setSelectedSession] = useState<SessionWithBlocks | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [tab, setTab] = useState<"all" | "completed" | "upcoming">("all")
+  const [tab, setTab] = useState<"all" | "completed">("all")
   const supabase = createClient()
 
   const fetchSessions = async () => {
@@ -52,9 +52,7 @@ export default function HistoryPage() {
   }, [])
 
   const filteredSessions = sessions.filter((session) => {
-    const today = new Date().toISOString().split("T")[0]
     if (tab === "completed") return session.completed
-    if (tab === "upcoming") return !session.completed && session.scheduled_date >= today
     return true
   })
 
@@ -90,15 +88,11 @@ export default function HistoryPage() {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="completed">
               <CheckCircle className="mr-1 h-3.5 w-3.5" />
               Done
-            </TabsTrigger>
-            <TabsTrigger value="upcoming">
-              <Calendar className="mr-1 h-3.5 w-3.5" />
-              Upcoming
             </TabsTrigger>
           </TabsList>
         </Tabs>
