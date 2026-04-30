@@ -7,7 +7,7 @@ import { SessionDetail } from "@/components/session-detail"
 import { StreakIndicator } from "@/components/streak-indicator"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Music2, Calendar, RefreshCw } from "lucide-react"
+import { Music2, RefreshCw } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Session, SessionWithBlocks } from "@/lib/types"
 
@@ -37,7 +37,6 @@ export default function HomePage() {
   }
 
   const fetchStreak = async () => {
-    // Get all completed sessions ordered by date descending
     const { data: sessions } = await supabase
       .from("sessions")
       .select("scheduled_date, completed")
@@ -49,32 +48,25 @@ export default function HomePage() {
       return
     }
 
-    // Calculate streak - count consecutive days with completed sessions
     let currentStreak = 0
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Get unique dates (in case multiple sessions per day)
     const uniqueDates = [...new Set(sessions.map(s => s.scheduled_date))].sort().reverse()
 
     for (let i = 0; i < uniqueDates.length; i++) {
       const sessionDate = new Date(uniqueDates[i])
       sessionDate.setHours(0, 0, 0, 0)
 
-      const expectedDate = new Date(today)
-      expectedDate.setDate(today.getDate() - i)
-      expectedDate.setHours(0, 0, 0, 0)
-
-      // Allow for yesterday to count if today not practiced yet
       if (i === 0) {
         const daysDiff = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
-        if (daysDiff > 1) break // Streak broken
+        if (daysDiff > 1) break
         currentStreak++
       } else {
         const prevDate = new Date(uniqueDates[i - 1])
         prevDate.setHours(0, 0, 0, 0)
         const daysDiff = Math.floor((prevDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
-        if (daysDiff > 1) break // Gap in streak
+        if (daysDiff > 1) break
         currentStreak++
       }
     }
@@ -117,8 +109,8 @@ export default function HomePage() {
 
   if (selectedSession) {
     return (
-      <main className="min-h-screen pb-20">
-        <div className="mx-auto max-w-md px-4 py-6">
+      <main className="min-h-screen pb-16">
+        <div className="px-3 py-4">
           <SessionDetail session={selectedSession} onBack={handleBack} />
         </div>
         <BottomNav />
@@ -127,64 +119,52 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen pb-20">
-      <div className="mx-auto max-w-md px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Music2 className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">BassDoJo</h1>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
+    <main className="min-h-screen pb-16">
+      <div className="px-3 py-4">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Music2 className="h-5 w-5 text-primary" />
+            <h1 className="text-lg font-bold">BassDoJo</h1>
+            <StreakIndicator streak={streak} isActiveToday={isTodayCompleted} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {new Date().toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
+              className="h-7 w-7 p-0"
               onClick={() => { fetchTodaySession(); fetchStreak(); }}
               disabled={isLoading}
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
-          </div>
-
-          {/* Streak */}
-          <div className="mt-4 flex justify-center rounded-lg bg-card p-3">
-            <StreakIndicator streak={streak} isActiveToday={isTodayCompleted} />
           </div>
         </div>
 
         {/* Today's Session */}
-        <section className="space-y-4">
-          <h2 className="flex items-center gap-2 font-semibold">
-            <Calendar className="h-4 w-4 text-primary" />
+        <section className="space-y-2">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             {"Today's Session"}
           </h2>
 
           {isLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-24 w-full" />
-            </div>
+            <Skeleton className="h-20 w-full" />
           ) : todaySession ? (
             <SessionCard
               session={todaySession}
               onClick={() => handleSessionClick(todaySession)}
             />
           ) : (
-            <div className="rounded-lg border border-dashed border-border p-6 text-center">
-              <Music2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-border p-4 text-center">
+              <Music2 className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
                 No session scheduled for today
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Check the History tab for upcoming sessions
               </p>
             </div>
           )}
@@ -192,18 +172,14 @@ export default function HomePage() {
 
         {/* Quick Stats */}
         {todaySession && (
-          <section className="mt-6 grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-card p-4 text-center">
-              <p className="text-2xl font-bold text-primary">
-                Day {todaySession.day}
-              </p>
-              <p className="text-xs text-muted-foreground">Current Day</p>
+          <section className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-lg bg-card p-3 text-center">
+              <p className="text-xl font-bold text-primary">Day {todaySession.day}</p>
+              <p className="text-[10px] text-muted-foreground">Current Day</p>
             </div>
-            <div className="rounded-lg bg-card p-4 text-center">
-              <p className="text-2xl font-bold text-accent">
-                {todaySession.instrument}
-              </p>
-              <p className="text-xs text-muted-foreground">Instrument</p>
+            <div className="rounded-lg bg-card p-3 text-center">
+              <p className="text-xl font-bold text-accent">{todaySession.instrument}</p>
+              <p className="text-[10px] text-muted-foreground">Instrument</p>
             </div>
           </section>
         )}
