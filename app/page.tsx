@@ -7,7 +7,8 @@ import { SessionDetail } from "@/components/session-detail"
 import { StreakIndicator } from "@/components/streak-indicator"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Music2, RefreshCw } from "lucide-react"
+import { Music2, RefreshCw, LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { Session, SessionWithBlocks } from "@/lib/types"
 
@@ -18,6 +19,13 @@ export default function HomePage() {
   const [streak, setStreak] = useState(0)
   const [isTodayCompleted, setIsTodayCompleted] = useState(false)
   const supabase = createClient()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/auth/login")
+    router.refresh()
+  }
 
   const fetchTodaySession = async () => {
     setIsLoading(true)
@@ -152,6 +160,14 @@ export default function HomePage() {
               disabled={isLoading}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
