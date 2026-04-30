@@ -60,19 +60,15 @@ export default function HomePage() {
     const uniqueDates: string[] = [...new Set(sessions.map((s: { scheduled_date: string }) => s.scheduled_date))].sort().reverse()
 
     for (let i = 0; i < uniqueDates.length; i++) {
-      const sessionDate = new Date(uniqueDates[i])
+      const sessionDate = new Date(uniqueDates[i] + "T12:00:00")
       sessionDate.setHours(0, 0, 0, 0)
-
-      const expectedDate = new Date(today)
-      expectedDate.setDate(today.getDate() - i)
-      expectedDate.setHours(0, 0, 0, 0)
 
       if (i === 0) {
         const daysDiff = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
         if (daysDiff > 1) break
         currentStreak++
       } else {
-        const prevDate = new Date(uniqueDates[i - 1])
+        const prevDate = new Date(uniqueDates[i - 1] + "T12:00:00")
         prevDate.setHours(0, 0, 0, 0)
         const daysDiff = Math.floor((prevDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
         if (daysDiff > 1) break
