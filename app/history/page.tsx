@@ -4,9 +4,8 @@ import { useEffect, useState } from "react"
 import { BottomNav } from "@/components/bottom-nav"
 import { SessionCard } from "@/components/session-card"
 import { SessionDetail } from "@/components/session-detail"
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Clock, CheckCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Session, SessionWithBlocks } from "@/lib/types"
@@ -64,8 +63,8 @@ export default function HistoryPage() {
 
   if (selectedSession) {
     return (
-      <main className="min-h-screen pb-20">
-        <div className="mx-auto max-w-md px-4 py-6">
+      <main className="min-h-screen pb-16">
+        <div className="px-3 py-4">
           <SessionDetail session={selectedSession} onBack={handleBack} />
         </div>
         <BottomNav />
@@ -74,57 +73,44 @@ export default function HistoryPage() {
   }
 
   return (
-    <main className="min-h-screen pb-20">
-      <div className="mx-auto max-w-md px-4 py-6">
+    <main className="min-h-screen pb-16">
+      <div className="px-3 py-4">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2">
-            <Clock className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">History</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            View all your practice sessions
-          </p>
+        <div className="flex items-center gap-2 mb-3">
+          <Clock className="h-5 w-5 text-primary" />
+          <h1 className="text-lg font-bold">History</h1>
         </div>
 
         {/* Tabs */}
-        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="completed">
-              <CheckCircle className="mr-1 h-3.5 w-3.5" />
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-3">
+          <TabsList className="grid w-full grid-cols-2 h-8">
+            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+            <TabsTrigger value="completed" className="text-xs">
+              <CheckCircle className="mr-1 h-3 w-3" />
               Done
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
         {/* Sessions List */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+              <Skeleton key={i} className="h-16 w-full" />
             ))
           ) : filteredSessions.length > 0 ? (
             filteredSessions.map((session) => (
-              <div key={session.id} className="relative">
-                <div className="absolute left-0 top-0 text-xs text-muted-foreground">
-                  {new Date(session.scheduled_date + "T12:00:00").toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </div>
-                <div className="pt-5">
-                  <SessionCard
-                    session={session}
-                    onClick={() => fetchSessionWithBlocks(session.id)}
-                  />
-                </div>
-              </div>
+              <SessionCard
+                key={session.id}
+                session={session}
+                showDate
+                onClick={() => fetchSessionWithBlocks(session.id)}
+              />
             ))
           ) : (
-            <div className="rounded-lg border border-dashed border-border p-6 text-center">
-              <Clock className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-border p-4 text-center">
+              <Clock className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
                 No sessions found
               </p>
             </div>

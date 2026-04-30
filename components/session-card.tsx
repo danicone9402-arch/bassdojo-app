@@ -1,51 +1,59 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Music, Clock, Target } from "lucide-react"
+import { cn } from "@/lib/utils"
 import type { Session } from "@/lib/types"
 
 interface SessionCardProps {
   session: Session
   onClick?: () => void
+  showDate?: boolean
 }
 
-export function SessionCard({ session, onClick }: SessionCardProps) {
+export function SessionCard({ session, onClick, showDate }: SessionCardProps) {
   return (
-    <Card
-      className={`cursor-pointer transition-all hover:border-primary/50 ${
-        session.completed ? "opacity-70" : ""
-      }`}
+    <div
+      className={cn(
+        "flex cursor-pointer gap-3 rounded-lg bg-card p-3 transition-all active:scale-[0.98]",
+        session.completed ? "opacity-60" : ""
+      )}
       onClick={onClick}
     >
-      <CardHeader className="pb-2">
+      {/* Status border */}
+      <div
+        className={cn(
+          "w-1 shrink-0 rounded-full",
+          session.completed ? "bg-primary/40" : "bg-primary"
+        )}
+      />
+
+      <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
-              <Music className="h-4 w-4 text-primary" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-sm truncate">{session.title}</h3>
+              <Badge
+                variant={session.completed ? "secondary" : "default"}
+                className="shrink-0 text-[10px] px-1.5 py-0"
+              >
+                {session.completed ? "Done" : "Today"}
+              </Badge>
             </div>
-            <div>
-              <CardTitle className="text-base">{session.title}</CardTitle>
-              <p className="text-xs text-muted-foreground">Day {session.day}</p>
-            </div>
-          </div>
-          <Badge variant={session.completed ? "secondary" : "default"}>
-            {session.completed ? "Done" : "Today"}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Target className="h-3.5 w-3.5" />
-            <span>{session.concept}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            <span>{session.instrument}</span>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Day {session.day} · {session.instrument} · {session.concept}
+            </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {showDate && (
+          <p className="text-[10px] text-muted-foreground/70 mt-1">
+            {new Date(session.scheduled_date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+          </p>
+        )}
+      </div>
+    </div>
   )
 }

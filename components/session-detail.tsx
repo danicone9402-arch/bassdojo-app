@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { PracticeBlock } from "./practice-block"
 import { SessionNotes } from "./session-notes"
-import { ArrowLeft, Music, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Brain, ChevronDown, ChevronUp } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { SessionWithBlocks, Block, SessionNote } from "@/lib/types"
+import type { SessionWithBlocks, SessionNote } from "@/lib/types"
 
 interface SessionDetailProps {
   session: SessionWithBlocks
@@ -17,6 +17,7 @@ interface SessionDetailProps {
 export function SessionDetail({ session: initialSession, onBack }: SessionDetailProps) {
   const [session, setSession] = useState(initialSession)
   const [isSaving, setIsSaving] = useState(false)
+  const [quizExpanded, setQuizExpanded] = useState(false)
   const supabase = createClient()
 
   const completedBlocks = session.blocks.filter((b) => b.completed).length
@@ -81,70 +82,112 @@ export function SessionDetail({ session: initialSession, onBack }: SessionDetail
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Music className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-bold">{session.title}</h1>
+            <h1 className="text-base font-semibold truncate">{session.title}</h1>
+            <Badge
+              variant={session.completed ? "secondary" : "default"}
+              className="text-[10px] px-1.5 py-0 shrink-0"
+            >
+              {session.completed ? "Done" : "In Progress"}
+            </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Day {session.day} - {session.concept}
+          <p className="text-xs text-muted-foreground">
+            Day {session.day} · {session.concept}
           </p>
         </div>
-        <Badge variant={session.completed ? "secondary" : "default"}>
-          {session.completed ? "Completed" : "In Progress"}
-        </Badge>
       </div>
 
       {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Progress</span>
-          <span className="font-medium">{completedBlocks}/{totalBlocks} blocks</span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-muted">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
+        <span className="text-[10px] text-muted-foreground shrink-0">
+          {completedBlocks}/{totalBlocks}
+        </span>
       </div>
 
       {/* Practice Blocks */}
-      <div className="space-y-3">
-        <h2 className="font-semibold">Practice Blocks</h2>
-        {session.blocks
-          .sort((a, b) => a.order_index - b.order_index)
-          .map((block) => (
-            <PracticeBlock
-              key={block.id}
-              block={block}
-              onToggleComplete={handleToggleBlock}
-              onUpdateBpm={handleUpdateBpm}
-            />
-          ))}
+      <div>
+        <h2 className="text-xs font-medium text-muted-foreground mb-1">Practice Blocks</h2>
+        <div className="divide-y divide-border">
+          {session.blocks
+            .sort((a, b) => a.order_index - b.order_index)
+            .map((block) => (
+              <PracticeBlock
+                key={block.id}
+                block={block}
+                onToggleComplete={handleToggleBlock}
+                onUpdateBpm={handleUpdateBpm}
+              />
+            ))}
+        </div>
       </div>
 
-      {/* Session Notes */}
+      {/* Session Notes - Collapsible */}
       <SessionNotes
         notes={session.session_notes}
         onAddNote={handleAddNote}
         onDeleteNote={handleDeleteNote}
       />
 
+      {/* Quiz Section - Collapsible */}
+      {session.quizzes && session.quizzes.length > 0 && (
+        <div className="border-t border-border pt-3">
+          <button
+            className="flex w-full items-center justify-between py-1"
+            onClick={() => setQuizExpanded(!quizExpanded)}
+          >
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <Brain className="h-4 w-4 text-primary" />
+              Quiz
+              <span className="text-xs text-muted-foreground">
+                ({session.quizzes.filter(q => q.answered).length}/{session.quizzes.length})
+              </span>
+            </span>
+            {quizExpanded ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+
+          {quizExpanded && (
+            <div className="mt-2 space-y-2">
+              {session.quizzes.map((quiz, i) => (
+                <div key={quiz.id} className="rounded bg-muted/50 p-2">
+                  <p className="text-xs font-medium">Q{i + 1}: {quiz.question}</p>
+                  {quiz.answered && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Answer: {quiz.user_answer}
+                      {quiz.user_answer === quiz.correct_answer ? " ✓" : " ✗"}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Complete Session Button */}
       {!session.completed && progress === 100 && (
         <Button
-          className="w-full"
-          size="lg"
+          className="w-full h-10"
           onClick={handleCompleteSession}
           disabled={isSaving}
         >
-          <CheckCircle2 className="mr-2 h-5 w-5" />
+          <CheckCircle2 className="mr-2 h-4 w-4" />
           {isSaving ? "Saving..." : "Complete Session"}
         </Button>
       )}

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -31,44 +30,57 @@ export function PracticeBlock({
   }
 
   return (
-    <Card
+    <div
       className={cn(
-        "transition-all",
-        block.completed && "border-primary/30 bg-primary/5"
+        "py-3",
+        block.completed && "opacity-60"
       )}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <Checkbox
-            checked={block.completed}
-            onCheckedChange={(checked) =>
-              onToggleComplete(block.id, checked as boolean)
-            }
-            className="mt-1"
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h4
-                className={cn(
-                  "font-medium leading-tight",
-                  block.completed && "line-through text-muted-foreground"
-                )}
-              >
-                {block.title}
-              </h4>
+      <div className="flex items-start gap-2.5">
+        <Checkbox
+          checked={block.completed}
+          onCheckedChange={(checked) =>
+            onToggleComplete(block.id, checked as boolean)
+          }
+          className="mt-0.5"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <h4
+              className={cn(
+                "text-sm font-medium leading-tight",
+                block.completed && "line-through text-muted-foreground"
+              )}
+            >
+              {block.title}
+            </h4>
+            <div className="flex items-center gap-1 shrink-0">
+              {block.target_bpm && expanded && (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    placeholder="BPM"
+                    value={bpmInput}
+                    onChange={(e) => setBpmInput(e.target.value)}
+                    onBlur={handleBpmSave}
+                    className="h-6 w-16 text-xs px-1.5 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  />
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 shrink-0"
+                className="h-6 w-6 p-0"
                 onClick={() => setExpanded(!expanded)}
               >
                 {expanded ? (
-                  <ChevronUp className="h-4 w-4" />
+                  <ChevronUp className="h-3.5 w-3.5" />
                 ) : (
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-3.5 w-3.5" />
                 )}
               </Button>
             </div>
+          </div>
 
             <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -118,8 +130,7 @@ export function PracticeBlock({
               </div>
             )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
