@@ -19,11 +19,12 @@ export default function HistoryPage() {
 
   const fetchSessions = async () => {
     setIsLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("sessions")
       .select("*")
       .order("scheduled_date", { ascending: false })
 
+    if (error) console.error("Error fetching sessions:", error)
     setSessions(data || [])
     setIsLoading(false)
   }

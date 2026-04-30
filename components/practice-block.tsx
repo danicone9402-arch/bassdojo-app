@@ -82,17 +82,50 @@ export function PracticeBlock({
             </div>
           </div>
 
-          <div className="mt-0.5 flex items-center gap-2.5 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-0.5">
-              <Clock className="h-3 w-3" />
-              {block.duration_min}m
-            </span>
-            {block.target_bpm && (
-              <span className="flex items-center gap-0.5">
-                <Gauge className="h-3 w-3" />
-                {block.target_bpm} BPM
-                {block.achieved_bpm && (
-                  <span className="text-primary ml-1">({block.achieved_bpm})</span>
+            <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {block.duration_min} min
+              </span>
+              {block.target_bpm && (
+                <span className="flex items-center gap-1">
+                  <Gauge className="h-3 w-3" />
+                  Target: {block.target_bpm} BPM
+                </span>
+              )}
+            </div>
+
+            {expanded && (
+              <div className="mt-3 space-y-3">
+                {block.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {block.description}
+                  </p>
+                )}
+
+                {block.target_bpm && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Achieved BPM"
+                      value={bpmInput}
+                      onChange={(e) => setBpmInput(e.target.value)}
+                      className="h-8 w-28 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8"
+                      onClick={handleBpmSave}
+                    >
+                      Save
+                    </Button>
+                    {block.achieved_bpm && (
+                      <span className="text-xs text-primary">
+                        Achieved: {block.achieved_bpm} BPM
+                      </span>
+                    )}
+                  </div>
                 )}
               </span>
             )}
