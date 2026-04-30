@@ -127,16 +127,9 @@ export function PracticeBlock({
                     )}
                   </div>
                 )}
-              </span>
+              </div>
             )}
           </div>
-
-          {expanded && block.description && (
-            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-              {block.description}
-            </p>
-          )}
-        </div>
       </div>
     </div>
   )
