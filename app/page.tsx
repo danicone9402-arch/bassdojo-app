@@ -21,9 +21,10 @@ export default function HomePage() {
 
   const fetchTodaySession = async () => {
     setIsLoading(true)
-    const today = new Date().toISOString().split("T")[0]
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("sessions")
       .select("*")
       .eq("scheduled_date", today)
@@ -31,6 +32,9 @@ export default function HomePage() {
       .limit(1)
       .single()
 
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching today session:", error)
+    }
     setTodaySession(data)
     setIsTodayCompleted(data?.completed || false)
     setIsLoading(false)
@@ -55,7 +59,7 @@ export default function HomePage() {
     today.setHours(0, 0, 0, 0)
 
     // Get unique dates (in case multiple sessions per day)
-    const uniqueDates = [...new Set(sessions.map(s => s.scheduled_date))].sort().reverse()
+    const uniqueDates: string[] = [...new Set(sessions.map((s: { scheduled_date: string }) => s.scheduled_date))].sort().reverse()
 
     for (let i = 0; i < uniqueDates.length; i++) {
       const sessionDate = new Date(uniqueDates[i])
@@ -65,16 +69,15 @@ export default function HomePage() {
       expectedDate.setDate(today.getDate() - i)
       expectedDate.setHours(0, 0, 0, 0)
 
-      // Allow for yesterday to count if today not practiced yet
       if (i === 0) {
         const daysDiff = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
-        if (daysDiff > 1) break // Streak broken
+        if (daysDiff > 1) break
         currentStreak++
       } else {
         const prevDate = new Date(uniqueDates[i - 1])
         prevDate.setHours(0, 0, 0, 0)
         const daysDiff = Math.floor((prevDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
-        if (daysDiff > 1) break // Gap in streak
+        if (daysDiff > 1) break
         currentStreak++
       }
     }

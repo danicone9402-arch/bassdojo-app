@@ -20,11 +20,12 @@ export default function HistoryPage() {
 
   const fetchSessions = async () => {
     setIsLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("sessions")
       .select("*")
       .order("scheduled_date", { ascending: false })
 
+    if (error) console.error("Error fetching sessions:", error)
     setSessions(data || [])
     setIsLoading(false)
   }
@@ -107,7 +108,7 @@ export default function HistoryPage() {
             filteredSessions.map((session) => (
               <div key={session.id} className="relative">
                 <div className="absolute left-0 top-0 text-xs text-muted-foreground">
-                  {new Date(session.scheduled_date).toLocaleDateString("en-US", {
+                  {new Date(session.scheduled_date + "T12:00:00").toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
                   })}

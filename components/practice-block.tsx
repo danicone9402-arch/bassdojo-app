@@ -98,7 +98,7 @@ export function PracticeBlock({
                       placeholder="Achieved BPM"
                       value={bpmInput}
                       onChange={(e) => setBpmInput(e.target.value)}
-                      className="h-8 w-28 text-sm"
+                      className="h-8 w-28 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <Button
                       size="sm"
